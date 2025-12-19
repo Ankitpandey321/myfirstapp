@@ -3,11 +3,13 @@ pipeline {
 
     tools {
         jdk 'jdk21'
+        maven 'maven3'
     }
 
     environment {
-        IMAGE_NAME = "myfirstapp"
-        IMAGE_TAG  = "${BUILD_NUMBER}"
+        APP_NAME = "myfirstapp"
+        APP_VERSION = "1.0.0"
+        DEPLOY_DIR = "/opt/apps/myfirstapp"
     }
 
     stages {
@@ -21,32 +23,37 @@ pipeline {
         stage('Verify Java & Maven') {
             steps {
                 sh '''
-                    java -version
-                    mvn -version
+                  java -version
+                  mvn -version
                 '''
             }
         }
 
-        /* ---------- CI ---------- */
-        stage('Build Java App') {
+        stage('Build Application (CI)') {
             steps {
                 sh 'mvn clean package -DskipTests'
             }
         }
 
-        /* ---------- CD ---------- */
-        stage('Build Container Image') {
+        stage('Archive Artifact') {
             steps {
-                sh 'docker build --tls-verify=false -t myfirstapp:${BUILD_NUMBER} .'
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
 
-
-        stage('Run Container') {
+        stage('Deploy Application (CD)') {
             steps {
                 sh '''
-                    docker rm -f myfirstapp || true
-                    docker run -d --name myfirstapp $IMAGE_NAME:$IMAGE_TAG
+                  mkdir -p ${DEPLOY_DIR}
+                  cp target/${APP_NAME}-${APP_VERSION}.jar ${DEPLOY_DIR}/
+                '''
+            }
+        }
+
+        stage('Run Application') {
+            steps {
+                sh '''
+                  java -jar ${DEPLOY_DIR}/${APP_NAME}-${APP_VERSION}.jar &
                 '''
             }
         }
@@ -54,13 +61,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ CI → CD Pipeline SUCCESS"
+            echo "✅ CI → CD SUCCESS (JAR deployed)"
         }
         failure {
-            echo "❌ CI → CD Pipeline FAILED"
-        }
-        always {
-            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+            echo "❌ CI → CD FAILED"
         }
     }
 }
