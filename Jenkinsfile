@@ -37,11 +37,10 @@ pipeline {
         /* ---------- CD ---------- */
         stage('Build Container Image') {
             steps {
-                sh '''
-                    docker build -t $IMAGE_NAME:$IMAGE_TAG .
-                '''
+                sh 'docker build --tls-verify=false -t myfirstapp:${BUILD_NUMBER} .'
             }
         }
+
 
         stage('Run Container') {
             steps {
