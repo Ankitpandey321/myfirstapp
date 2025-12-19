@@ -5,6 +5,11 @@ pipeline {
         jdk 'jdk21'
     }
 
+    environment {
+        IMAGE_NAME = "myfirstapp"
+        IMAGE_TAG  = "${BUILD_NUMBER}"
+    }
+
     stages {
 
         stage('Checkout Code') {
@@ -22,25 +27,38 @@ pipeline {
             }
         }
 
+        /* ---------- CI ---------- */
         stage('Build Java App') {
             steps {
                 sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Run Java App') {
+        /* ---------- CD ---------- */
+        stage('Build Container Image') {
             steps {
-                sh 'java -jar target/myfirstapp-1.0.0.jar'
+                sh '''
+                    docker build -t $IMAGE_NAME:$IMAGE_TAG .
+                '''
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh '''
+                    docker rm -f myfirstapp || true
+                    docker run -d --name myfirstapp $IMAGE_NAME:$IMAGE_TAG
+                '''
             }
         }
     }
 
     post {
         success {
-            echo "✅ CI Pipeline SUCCESS - JAR built"
+            echo "✅ CI → CD Pipeline SUCCESS"
         }
         failure {
-            echo "❌ CI Pipeline FAILED"
+            echo "❌ CI → CD Pipeline FAILED"
         }
         always {
             archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
