@@ -1,0 +1,31 @@
+app:
+  name: myfirstapp
+  version: "1.0.0"
+
+image:
+  repository: myrepo/myfirstapp
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount:
+  min: 1
+  max: 3
+
+resources:
+  limits:
+    cpu: "1"
+    memory: "2Gi"
+  requests:
+    cpu: "900m"      # 10% less than limit
+    memory: "1800Mi" # 10% less than limit
+
+java:
+  version: 21
+
+service:
+  port: 8080
+  type: ClusterIP
+
+autoscaling:
+  enabled: true
+  targetCPUUtilizationPercentage: 100
