@@ -3,8 +3,7 @@ pipeline {
 
     /* Explicitly tell Jenkins to use Java 21 */
     tools {
-        jdk 'jdk21'          // This must be configured in Jenkins Global Tool Configuration
-        maven 'maven3'       // Optional but recommended
+        jdk 'jdk21'          // This must be configured in Jenkins Global Tool Configuratio
     }
 
     environment {
