@@ -27,6 +27,12 @@ pipeline {
                 sh 'mvn clean package -DskipTests'
             }
         }
+
+        stage('Run Java App') {
+            steps {
+                sh 'java -jar target/myfirstapp-1.0.0.jar'
+            }
+        }
     }
 
     post {
